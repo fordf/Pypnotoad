@@ -1,18 +1,5 @@
 #!/usr/bin/env python2
-"""
-    Created on 1 Apr 2014
-    @author: Max Demian
-    Todo:
-    * Home Zone (+img_safe)
-    * Timer
-    * Animations (Frog + Turtles)
-    * Class that creates and holds all the objects as sprite groups
-    * Handle sprites better (separation, SpriteGroups, ...)
-    * Figure out a different delay for frog.death() as currently you can move
-      inside the frozen screen. Also, enable death when sliding out the river.
-    * Sounds & Music
-    * Score and Highscores
-"""
+
 
 import pygame
 import sys
