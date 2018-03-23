@@ -29,6 +29,8 @@ KEY_BINDINGS = {
     K_RIGHT: 'right',
 }
 
+QUIT_KEYS = {K_ESCAPE}
+
 WIDTH, HEIGHT = 300, 300
 
 
@@ -41,8 +43,7 @@ class GameClient(object):
         self.bg_surface = pygame.transform.scale(bg, (800, 800)).convert()
         self.player_image = pygame.image.load("data/frog_safe.png").convert_alpha()
         pygame.event.set_allowed(None)
-        pygame.event.set_allowed([pygame.locals.QUIT,
-                                  pygame.locals.KEYDOWN])
+        pygame.event.set_allowed([QUIT, KEYDOWN])
         pygame.key.set_repeat(50, 50)
 
     async def run(self):
@@ -63,30 +64,6 @@ class GameClient(object):
                     pygame.event.clear(KEYDOWN)
                 pygame.display.update()
 
-    async def consumer_loop(self, websocket):
-        while True:
-            await self.consumer(websocket)
-
-    async def producer_loop(self):
-        while True:
-            await self.producer()
-
-    async def consumer(self, websocket):
-        async for message in websocket:
-            await self.consume(websocket, message)
-
-    async def producer(self):
-        """Send all player positions to all players."""
-        await asyncio.wait([ws.send(self.get_state()) for ws in self.players])
-
-    async def consume(self, websocket, message):
-        pos = self.players[websocket]
-        action = MESSAGE_ACTIONS[message]
-        print(f'{id(websocket)}: {action}')
-        self.players[websocket] = ACTIONS[action](pos)
-
-    def get_state(self):
-        return '|'.join(map(str, self.players.values()))
 
 client = GameClient()
 
