@@ -63,6 +63,30 @@ class GameClient(object):
                     pygame.event.clear(KEYDOWN)
                 pygame.display.update()
 
+    async def consumer_loop(self, websocket):
+        while True:
+            await self.consumer(websocket)
+
+    async def producer_loop(self):
+        while True:
+            await self.producer()
+
+    async def consumer(self, websocket):
+        async for message in websocket:
+            await self.consume(websocket, message)
+
+    async def producer(self):
+        """Send all player positions to all players."""
+        await asyncio.wait([ws.send(self.get_state()) for ws in self.players])
+
+    async def consume(self, websocket, message):
+        pos = self.players[websocket]
+        action = MESSAGE_ACTIONS[message]
+        print(f'{id(websocket)}: {action}')
+        self.players[websocket] = ACTIONS[action](pos)
+
+    def get_state(self):
+        return '|'.join(map(str, self.players.values()))
 
 client = GameClient()
 

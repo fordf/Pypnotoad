@@ -34,10 +34,12 @@ class Game(object):
     async def connect(self, websocket, path):
         self.players[websocket] = tuple(random.randint(0, 800) for _ in range(2))
         try:
-            tasks = [self.consumer_loop(websocket), self.producer_loop()]
+            cors = [self.consumer_loop(websocket), self.producer_loop()]
+            tasks = map(asyncio.ensure_future, cors)
             done, pending = await asyncio.wait(tasks)
         except websockets.exceptions.ConnectionClosed:
             for task in tasks:
+                print("CANCELING")
                 task.cancel()
             del self.players[websocket]
 
