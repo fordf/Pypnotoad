@@ -33,33 +33,26 @@ class Game(object):
 
     async def connect(self, websocket, path):
         self.players[websocket] = tuple(random.randint(0, 800) for _ in range(2))
-        try:
-            cors = [self.consumer_loop(websocket), self.producer_loop()]
-            tasks = map(asyncio.ensure_future, cors)
-            done, pending = await asyncio.wait(tasks)
-        except websockets.exceptions.ConnectionClosed:
-            for task in tasks:
-                print("CANCELING")
-                task.cancel()
-            del self.players[websocket]
-
-    async def consumer_loop(self, websocket):
-        while True:
-            await self.consumer(websocket)
-
-    async def producer_loop(self):
-        while True:
-            await self.producer()
+        cors = [self.consumer(websocket), self.producer()]
+        tasks = map(asyncio.ensure_future, cors)
+        done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for task in pending:
+            task.cancel()
+        del self.players[websocket]
+        print('player quit')
 
     async def consumer(self, websocket):
-        async for message in websocket:
-            await self.consume(websocket, message)
+        while websocket.open:
+            async for message in websocket:
+                print(message)
+                self.consume(websocket, message)
 
     async def producer(self):
-        """Send all player positions to all players."""
-        await asyncio.wait([ws.send(self.get_state()) for ws in self.players])
+        while True:
+            await asyncio.wait([ws.send(self.get_state()) for ws in self.players])
+            await asyncio.sleep(1)
 
-    async def consume(self, websocket, message):
+    def consume(self, websocket, message):
         pos = self.players[websocket]
         action = MESSAGE_ACTIONS[message]
         print(f'{id(websocket)}: {action}')
