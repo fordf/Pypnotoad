@@ -118,8 +118,8 @@ class Frog(pygame.sprite.Sprite):
         self.img = self.img_forward
         self.rect = self.img.get_rect()
         self.lives = 4
-        self.rect.x = 220
-        self.rect.y = 560
+        self.rect.x = 1
+        self.rect.y = 5
         self.startpos = (self.rect.x, self.rect.y)
         self.mask = pygame.mask.from_surface(self.img)
 
@@ -298,17 +298,17 @@ def create_hostiles():
     return hostiles
 
 
-def create_deathzones():
+# def create_deathzones():
 
-    deathzones = pygame.sprite.Group()
+    # deathzones = pygame.sprite.Group()
 
-    topground = TopGround()
-    deathzones.add(topground)
+    # topground = TopGround()
+    # deathzones.add(topground)
 
     # river = River()
     # deathzones.add(river)
 
-    return deathzones
+    # return deathzones
 
 def main():
 
@@ -317,7 +317,7 @@ def main():
     # Basic setup.
     level = 0
     clock = pygame.time.Clock()
-    background = pygame.image.load("data/background.png")
+    background = pygame.image.load("data/battle-map.png")
 
 
     # Sprite groups
@@ -325,7 +325,7 @@ def main():
     frog = Frog()
     hostiles = create_hostiles()
     floatables = create_floatables()
-    deathzones = create_deathzones()
+    # deathzones = create_deathzones()
 
 
     while True:
@@ -361,8 +361,8 @@ def main():
         for i in floatables:
             i.draw()
 
-        for i in deathzones:
-            i.draw()
+        # for i in deathzones:
+        #     i.draw()
         # Draw the frog so that he appears on top of river objects but beneath
         # hostiles.
         frog.draw()
@@ -385,8 +385,8 @@ def main():
             if frog.mask.overlap(i.mask, (offset_x, offset_y)):
                 frog.death()
 
-            if pygame.sprite.spritecollide(frog, deathzones, False):
-                frog.death()
+            # if pygame.sprite.spritecollide(frog, deathzones, False):
+            #     frog.death()
 
         # The floatable images have transparency everywhere. The mask collision
         # detection is not very reliable here. Thus, we use sprites.
