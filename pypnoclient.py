@@ -31,7 +31,7 @@ KEY_BINDINGS = {
 
 QUIT_KEYS = {K_ESCAPE}
 
-WIDTH, HEIGHT = 300, 300
+WIDTH, HEIGHT = 800, 800
 
 
 class GameClient(object):
