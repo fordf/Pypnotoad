@@ -1,11 +1,15 @@
 #!/usr/bin/env python2
+"""Thos is Pypnotoad"""
+
 import pygame
 import sys
 from random import choice, randrange
 
+
 # import pdb; pdb.set_trace()
 class StaticObstacle(pygame.sprite.Sprite):
     "Base class for all static obstacles"
+
     def __init__(self):
         super(StaticObstacle, self).__init__()
 
@@ -13,54 +17,54 @@ class StaticObstacle(pygame.sprite.Sprite):
         window.blit(self.img, (self.rect.x, self.rect.y))
 
 
-class TopGround(StaticObstacle):
+# class TopGround(StaticObstacle):
 
-    def __init__(self):
-        super(TopGround, self).__init__()
-        self.img = pygame.image.load("data/top_ground.png")
-        self.rect = self.img.get_rect()
-        self.rect.x = 0
-        self.rect.y = 60
-        self.mask = pygame.mask.from_surface(self.img)
+#     def __init__(self):
+#         super(TopGround, self).__init__()
+#         self.img = pygame.image.load("data/top_ground.png")
+#         self.rect = self.img.get_rect()
+#         self.rect.x = 0
+#         self.rect.y = 0
+#         self.mask = pygame.mask.from_surface(self.img)
 
-class River(StaticObstacle):
+# class River(StaticObstacle):
 
-    def __init__(self):
-        super(River, self).__init__()
-        self.img = pygame.Surface((480, 200), pygame.SRCALPHA)
-        self.rect = self.img.get_rect()
+#     def __init__(self):
+#         super(River, self).__init__()
+#         self.img = pygame.Surface((480, 200), pygame.SRCALPHA)
+#         self.rect = self.img.get_rect()
 
-    def draw(self):
-        self.img.fill((255, 255, 255, 128))
-        window.blit(self.img, (0, 118))
-
-
-class Camper(StaticObstacle):
-    "Enemies camping the safezones inside the TopGround"
-    def __init__(self):
-        super(Camper, self).__init__()
-        self.imgs = ["data/croc.png", "data/fly.png"]
-        self.img = pygame.image.load(choice(self.imgs))
-        self.spawns = [420, 320, 220, 120, 20]
-        self.duration = randrange(5, 11)
-        self.rect = self.img.get_rect()
-        self.rect.x = choice(self.spawns)
-        self.rect.y = 80
-        self.mask = pygame.mask.from_surface(self.img)
+#     def draw(self):
+#         self.img.fill((255, 255, 255, 128))
+#         window.blit(self.img, (0, 118))
 
 
+# class Camper(StaticObstacle):
+#     "Enemies camping the safezones inside the TopGround"
+#     def __init__(self):
+#         super(Camper, self).__init__()
+#         self.imgs = ["data/croc.png", "data/fly.png"]
+#         self.img = pygame.image.load(choice(self.imgs))
+#         self.spawns = [420, 320, 220, 120, 20]
+#         self.duration = randrange(5, 11)
+#         self.rect = self.img.get_rect()
+#         self.rect.x = choice(self.spawns)
+#         self.rect.y = 80
+#         self.mask = pygame.mask.from_surface(self.img)
 
-class MovingObstacle(pygame.sprite.Sprite):
-    "Base class for all moving obstacles"
-    def __init__(self, x, y, img, direction):
-        super(MovingObstacle, self).__init__()
-        self.speed = 2
-        self.go_left = direction
-        self.img = pygame.image.load(img)
-        self.rect = self.img.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.mask = pygame.mask.from_surface(self.img)
+
+
+# class MovingObstacle(pygame.sprite.Sprite):
+#     "Base class for all moving obstacles"
+#     def __init__(self, x, y, img, direction):
+#         super(MovingObstacle, self).__init__()
+#         self.speed = 2
+#         self.go_left = direction
+#         self.img = pygame.image.load(img)
+#         self.rect = self.img.get_rect()
+#         self.rect.x = x
+#         self.rect.y = y
+#         self.mask = pygame.mask.from_surface(self.img)
 
     def draw(self):
         "Moves and then draws the obstacle"
@@ -86,22 +90,22 @@ class MovingObstacle(pygame.sprite.Sprite):
         window.blit(self.img, (self.rect.x, self.rect.y))
 
 
-class Car(MovingObstacle):
+# class Car(MovingObstacle):
 
-    def __init__(self, x, y, img, direction=0):
-        super(Car, self).__init__(x, y, img, direction)
-
-
-class Turtle(MovingObstacle):
-
-    def __init__(self, x, y, img, direction=0):
-        super(Turtle, self).__init__(x, y, img, direction)
+#     def __init__(self, x, y, img, direction=0):
+#         super(Car, self).__init__(x, y, img, direction)
 
 
-class Log(MovingObstacle):
+# class Turtle(MovingObstacle):
 
-    def __init__(self, x, y, img, direction=0):
-        super(Log, self).__init__(x, y, img, direction)
+#     def __init__(self, x, y, img, direction=0):
+#         super(Turtle, self).__init__(x, y, img, direction)
+
+
+# class Log(MovingObstacle):
+
+#     def __init__(self, x, y, img, direction=0):
+#         super(Log, self).__init__(x, y, img, direction)
 
 
 class Frog(pygame.sprite.Sprite):
@@ -111,51 +115,51 @@ class Frog(pygame.sprite.Sprite):
         self.img_death = pygame.image.load("data/frog_death_3.png")
         self.img_safe = pygame.image.load("data/frog_safe.png")
         self.img_life = pygame.image.load("data/lives.png")
-        self.img_forward = pygame.image.load("data/frog.png")
-        self.img_back = pygame.image.load("data/frog_back.png")
-        self.img_left = pygame.image.load("data/frog_left.png")
-        self.img_right = pygame.image.load("data/frog_right.png")
+        self.img_forward = pygame.image.load("data/pypup.png")
+        self.img_back = pygame.image.load("data/pypdown.png")
+        self.img_left = pygame.image.load("data/pypleft.png")
+        self.img_right = pygame.image.load("data/pypright.png")
         self.img = self.img_forward
         self.rect = self.img.get_rect()
         self.lives = 4
-        self.rect.x = 1
-        self.rect.y = 5
+        self.rect.x = 20
+        self.rect.y = 20
         self.startpos = (self.rect.x, self.rect.y)
         self.mask = pygame.mask.from_surface(self.img)
 
     def draw(self):
         self.mask = pygame.mask.from_surface(self.img)
         self.move()
-        self.display_lives()
+        # self.display_lives()
         window.blit(self.img, (self.rect.x, self.rect.y))
 
     def move(self):
         self.rect.move(self.rect.x, self.rect.y)
         # Ensure the player stays within the playable zone.
-        self.rect.clamp_ip(pygame.Rect((0, 80), (480, 520)))
+        self.rect.clamp_ip(pygame.Rect((0, 0), (1000, 600)))
 
     def left(self):
         self.img = self.img_left
-        self.rect.x -= 20
+        self.rect.x -= 18
 
     def right(self):
         self.img = self.img_right
-        self.rect.x += 20
+        self.rect.x += 18
 
     def forward(self):
         self.img = self.img_forward
-        self.rect.y -= 40
+        self.rect.y -= 25
 
     def back(self):
         self.img = self.img_back
-        self.rect.y += 40
+        self.rect.y += 25
 
-    def display_lives(self):
-        "Draw the life bar"
-        x, y = 0, 40
-        for _ in range(self.lives):
-            window.blit(self.img_life, (x, y))
-            x += 20
+    # def display_lives(self):
+    #     "Draw the life bar"
+    #     x, y = 0, 40
+    #     for _ in range(self.lives):
+    #         window.blit(self.img_life, (x, y))
+    #         x += 20
 
     def death(self):
         "Update lives, trigger visual clues and reset frog position to default"
@@ -232,70 +236,70 @@ def start_screen():
     pygame.mixer.music.fadeout(2000)
 
 
-def create_floatables():
-    "Create the Turtle and Log instances"
-    floatables = pygame.sprite.Group()
-    ys = [128, 160, 208, 248, 280]
-    x = 0
-    for _ in range(4):
-        turtle = Turtle(x, ys[4], "data/turtle_3_full.png", 1)
-        floatables.add(turtle)
-        x += 128
-    x = 20
-    for _ in range(3):
-        log = Log(x, ys[3], "data/log_small.png")
-        floatables.add(log)
-        x += 192
-    x = 40
-    for _ in range(2):
-        log = Log(x, ys[2], "data/log_big.png")
-        floatables.add(log)
-        x += 256
-    x = 60
-    for _ in range(4):
-        turtle = Turtle(x, ys[1], "data/turtle_2_full.png", 1)
-        floatables.add(turtle)
-        x += 112
-    x = 80
-    for _ in range(3):
-        log = Log(x, ys[0], "data/log_medium.png")
-        floatables.add(log)
-        x += 176
+# def create_floatables():
+#     "Create the Turtle and Log instances"
+#     floatables = pygame.sprite.Group()
+#     ys = [128, 160, 208, 248, 280]
+#     x = 0
+#     for _ in range(4):
+#         turtle = Turtle(x, ys[4], "data/turtle_3_full.png", 1)
+#         floatables.add(turtle)
+#         x += 128
+#     x = 20
+#     for _ in range(3):
+#         log = Log(x, ys[3], "data/log_small.png")
+#         floatables.add(log)
+#         x += 192
+#     x = 40
+#     for _ in range(2):
+#         log = Log(x, ys[2], "data/log_big.png")
+#         floatables.add(log)
+#         x += 256
+#     x = 60
+#     for _ in range(4):
+#         turtle = Turtle(x, ys[1], "data/turtle_2_full.png", 1)
+#         floatables.add(turtle)
+#         x += 112
+#     x = 80
+#     for _ in range(3):
+#         log = Log(x, ys[0], "data/log_medium.png")
+#         floatables.add(log)
+#         x += 176
 
-    return floatables
+#     return floatables
 
 
-def create_hostiles():
-    "Create the obstacles that trigger death on collision"
-    hostiles = pygame.sprite.Group()
-    ys = [520, 480, 440, 400, 360]
-    x = randrange(200)
-    for _ in range(3):
-        car = Car(x, ys[0], "data/car_1.png", 1)
-        hostiles.add(car)
-        x += 144
-    x = randrange(200)
-    for _ in range(3):
-        car = Car(x, ys[1], "data/car_2.png")
-        hostiles.add(car)
-        x += 128
-    x = randrange(200)
-    for _ in range(3):
-        car = Car(x, ys[2], "data/car_3.png", 1)
-        hostiles.add(car)
-        x += 128
-    x = randrange(200)
-    for _ in range(2):
-        car = Car(x, ys[3], "data/car_4.png")
-        hostiles.add(car)
-        x += 128
-    x = randrange(200)
-    for _ in range(2):
-        car = Car(x, ys[4], "data/car_5.png", 1)
-        hostiles.add(car)
-        x += 176
+# def create_hostiles():
+#     "Create the obstacles that trigger death on collision"
+#     hostiles = pygame.sprite.Group()
+#     ys = [520, 480, 440, 400, 360]
+#     x = randrange(200)
+#     for _ in range(3):
+#         car = Car(x, ys[0], "data/car_1.png", 1)
+#         hostiles.add(car)
+#         x += 144
+#     x = randrange(200)
+#     for _ in range(3):
+#         car = Car(x, ys[1], "data/car_2.png")
+#         hostiles.add(car)
+#         x += 128
+#     x = randrange(200)
+#     for _ in range(3):
+#         car = Car(x, ys[2], "data/car_3.png", 1)
+#         hostiles.add(car)
+#         x += 128
+#     x = randrange(200)
+#     for _ in range(2):
+#         car = Car(x, ys[3], "data/car_4.png")
+#         hostiles.add(car)
+#         x += 128
+#     x = randrange(200)
+#     for _ in range(2):
+#         car = Car(x, ys[4], "data/car_5.png", 1)
+#         hostiles.add(car)
+#         x += 176
 
-    return hostiles
+#     return hostiles
 
 
 # def create_deathzones():
@@ -317,14 +321,14 @@ def main():
     # Basic setup.
     level = 0
     clock = pygame.time.Clock()
-    background = pygame.image.load("data/battle-map.png")
+    background = pygame.image.load("tilesets/battle-map.png")
 
 
     # Sprite groups
-    campers = Camper()
+    # campers = Camper()
     frog = Frog()
-    hostiles = create_hostiles()
-    floatables = create_floatables()
+    # hostiles = create_hostiles()
+    # floatables = create_floatables()
     # deathzones = create_deathzones()
 
 
@@ -358,8 +362,8 @@ def main():
         window.blit(background, (0, 0))
 
         # First, draw the floating obstacles.
-        for i in floatables:
-            i.draw()
+        # for i in floatables:
+        #     i.draw()
 
         # for i in deathzones:
         #     i.draw()
@@ -369,32 +373,32 @@ def main():
 
         # campers.draw()
 
-        for i in hostiles:
-            i.draw()
+        # for i in hostiles:
+        #     i.draw()
 
 
         #======================================================================
         # Collision
         #======================================================================
-        for i in hostiles:
-            offset_x = frog.rect.left - i.rect.left
-            offset_y = frog.rect.top - i.rect.top
+        # for i in hostiles:
+        #     offset_x = frog.rect.left - i.rect.left
+        #     offset_y = frog.rect.top - i.rect.top
             # TODO: Fix car_5 (trucks). Somehow their collision box is off.
             # Same goes for the TopGround... Formula to calculate the overlap
             # might be off.
-            if frog.mask.overlap(i.mask, (offset_x, offset_y)):
-                frog.death()
+            # if frog.mask.overlap(i.mask, (offset_x, offset_y)):
+            #     frog.death()
 
             # if pygame.sprite.spritecollide(frog, deathzones, False):
             #     frog.death()
 
         # The floatable images have transparency everywhere. The mask collision
         # detection is not very reliable here. Thus, we use sprites.
-        for i in pygame.sprite.spritecollide(frog, floatables, False):
-            if i.go_left:
-                frog.rect.x -= i.speed
-            else:
-                frog.rect.x += i.speed
+        # for i in pygame.sprite.spritecollide(frog, floatables, False):
+        #     if i.go_left:
+        #         frog.rect.x -= i.speed
+        #     else:
+        #         frog.rect.x += i.speed
 
         # If we're out of lives, invoke the game over screen.
         if not frog.lives:
@@ -413,5 +417,5 @@ def main():
 if __name__ == '__main__':
     # Initialize Pygame, the screen/window and some globals.
     pygame.init()
-    window = pygame.display.set_mode((480, 600), 0, 32)
+    window = pygame.display.set_mode((1000, 600), 0, 32)
     main()
