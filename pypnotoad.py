@@ -3,12 +3,13 @@
 
 import pygame
 import sys
-from random import choice, randrange
+# from random import choice, randrange
+from toad import Frog
 
 
 # import pdb; pdb.set_trace()
 class StaticObstacle(pygame.sprite.Sprite):
-    "Base class for all static obstacles"
+    """Base class for all static obstacles"""
 
     def __init__(self):
         super(StaticObstacle, self).__init__()
@@ -66,28 +67,28 @@ class StaticObstacle(pygame.sprite.Sprite):
 #         self.rect.y = y
 #         self.mask = pygame.mask.from_surface(self.img)
 
-    def draw(self):
-        "Moves and then draws the obstacle"
-        # Adjust the position of the obstacle.
-        if self.go_left:
-            self.rect.x -= self.speed
-        else:
-            self.rect.x += self.speed
-        # Reset the object if it moves out of screen.
-        if isinstance(self, Car):
-            if self.rect.x > 480:
-                self.rect.x = -40
-            elif self.rect.x < -40:
-                self.rect.x = 480
-        else:
-            # To accommodate the big logs and introduce gaps, we use -180 here.
-            if self.rect.x > 480:
-                self.rect.x = -180
-            elif self.rect.x < -180:
-                self.rect.x = 480
+    # def draw(self):
+    #     "Moves and then draws the obstacle"
+    #     # Adjust the position of the obstacle.
+    #     if self.go_left:
+    #         self.rect.x -= self.speed
+    #     else:
+    #         self.rect.x += self.speed
+    #     # Reset the object if it moves out of screen.
+    #     if isinstance(self, Car):
+    #         if self.rect.x > 480:
+    #             self.rect.x = -40
+    #         elif self.rect.x < -40:
+    #             self.rect.x = 480
+    #     else:
+    #         # To accommodate the big logs and introduce gaps, we use -180 here.
+    #         if self.rect.x > 480:
+    #             self.rect.x = -180
+    #         elif self.rect.x < -180:
+    #             self.rect.x = 480
 
-        # And finally draw it.
-        window.blit(self.img, (self.rect.x, self.rect.y))
+        # # And finally draw it.
+        # window.blit(self.img, (self.rect.x, self.rect.y))
 
 
 # class Car(MovingObstacle):
@@ -109,6 +110,7 @@ class StaticObstacle(pygame.sprite.Sprite):
 
 
 class Frog(pygame.sprite.Sprite):
+    """This is the frog class"""
 
     def __init__(self):
         super(Frog, self).__init__()
@@ -119,7 +121,7 @@ class Frog(pygame.sprite.Sprite):
         self.img_back = pygame.image.load("data/pypdown.png")
         self.img_left = pygame.image.load("data/pypleft.png")
         self.img_right = pygame.image.load("data/pypright.png")
-        self.img = self.img_forward
+        self.img = self.img_back
         self.rect = self.img.get_rect()
         self.lives = 4
         self.rect.x = 20
@@ -154,12 +156,12 @@ class Frog(pygame.sprite.Sprite):
         self.img = self.img_back
         self.rect.y += 25
 
-    # def display_lives(self):
-    #     "Draw the life bar"
-    #     x, y = 0, 40
-    #     for _ in range(self.lives):
-    #         window.blit(self.img_life, (x, y))
-    #         x += 20
+    def display_lives(self):
+        "Draw the life bar"
+        x, y = 0, 40
+        for _ in range(self.lives):
+            window.blit(self.img_life, (x, y))
+            x += 20
 
     def death(self):
         "Update lives, trigger visual clues and reset frog position to default"
@@ -340,6 +342,7 @@ def main():
             if event.type == pygame.QUIT:
                 terminate()
             elif event.type == pygame.KEYDOWN:
+                keys = pygame.key.get_pressed()
                 if event.key == pygame.K_ESCAPE:
                     pygame.mixer.music.pause()
                     pause()
