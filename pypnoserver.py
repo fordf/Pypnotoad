@@ -40,9 +40,8 @@ class Game(object):
             'pos': [random.randint(0, WIDTH), random.randint(0, HEIGHT)]
         }
         cors = [self.consumer(websocket), self.producer()]
-        tasks = map(asyncio.ensure_future, cors)
         try:
-            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            done, pending = await asyncio.wait(cors, return_when=asyncio.FIRST_COMPLETED)
             for task in pending:
                 task.cancel()
         finally:
@@ -52,9 +51,8 @@ class Game(object):
     async def consumer(self, websocket):
         while websocket.open:
             async for message in websocket:
-                print(message)
                 await self.consume(websocket, message)
-
+                await asyncio.sleep(.01)
 
     async def producer(self):
         while True:
@@ -68,19 +66,21 @@ class Game(object):
         action = MESSAGE_ACTIONS[message]
         print(f'{id(websocket)}: {action}')
         self.players[websocket]['pos'] = ACTIONS[action](pos)
-        await asyncio.sleep(.01)
 
     def get_state(self):
         return '|'.join(f'{v["id"]},' + ','.join(map(str, v['pos'])) for v in self.players.values())
 
-
-game = Game()
-
-ws_server = websockets.serve(
-    game.connect,
-    os.environ['server_private_ip'],
-    os.environ['server_ws_port']
-)
-
-asyncio.get_event_loop().run_until_complete(ws_server)
-asyncio.get_event_loop().run_forever()
+if __name__ == '__main__':
+    game = Game()
+    try:
+        ws_server = websockets.serve(
+            game.connect,
+            os.environ['server_private_ip'],
+            os.environ['server_ws_port']
+        )
+        asyncio.get_event_loop().run_until_complete(ws_server)
+        asyncio.get_event_loop().run_forever()
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        raise e
