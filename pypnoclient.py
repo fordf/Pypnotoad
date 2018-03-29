@@ -37,7 +37,8 @@ COLORS = ['White', 'Red', 'Blue', 'Green', 'Pink']
 
 
 def clear_callback(surf, rect):
-    surf.fill((0,0,0), rect)
+    surf.fill((0, 0, 0), rect)
+
 
 class Block(pygame.sprite.Sprite):
 
@@ -96,6 +97,7 @@ class GameClient(object):
             self.playerGroup.clear(self.screen, clear_callback)
             self.playerGroup.draw(self.screen)
             await asyncio.sleep(.03)
+
 
     async def produce_update(self, websocket):
         while self.running:
