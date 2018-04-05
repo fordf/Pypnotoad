@@ -69,10 +69,9 @@ class GameClient(object):
         async with websockets.connect('ws://{}:{}'.format(
             os.environ['server_endpoint'], os.environ['server_ws_port'])
         ) as websocket:
-            consumer_task = asyncio.ensure_future(self.consume_state(websocket))
-            producer_task = asyncio.ensure_future(self.produce_update(websocket))
+            cors = [self.consume_state(websocket), self.produce_update(websocket)]
             done, pending = await asyncio.wait(
-                [consumer_task, producer_task],
+                cors,
                 return_when=asyncio.FIRST_COMPLETED,
             )
             for task in pending:
