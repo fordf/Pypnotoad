@@ -23,7 +23,7 @@ def doMath():
     def trapZero(result):
         result.trap(ZeroDivisionError)
         print("Divided by zero: returning INF")
-        return 1e1000
+        return float('inf')
     divideDeferred.addErrback(trapZero)
 
     def done(result):
