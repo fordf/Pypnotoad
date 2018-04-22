@@ -12,18 +12,27 @@ import random
 import asyncio
 import websockets
 
+from collections import OrderedDict, defaultdict
 
-STEPSIZE = 30
-WIDTH, HEIGHT = 490, 490
 
-ACTIONS = {
-    'left': lambda pos: (max(0, pos[0] - STEPSIZE), pos[1]),
-    'right': lambda pos: (min(WIDTH, pos[0] + STEPSIZE), pos[1]),
-    'up': lambda pos: (pos[0], max(0, pos[1] - STEPSIZE)),
-    'down': lambda pos: (pos[0], min(HEIGHT, pos[1] + STEPSIZE)),
-}
+TILES_X, TILES_Y = 100, 100
 
-MESSAGE_ACTIONS = dict(zip(map(bin, range(20)), ACTIONS.keys()))
+def left(player):
+    return {'xy': (max(0, player['xy'][0] - 1), player['xy'][1])}
+
+def right(player):
+    return {'xy': (min(TILES_X, player['xy'][0] + 1), player['xy'][1])}
+
+def up(player):
+    return {'xy': (player['xy'][0], max(0, player['xy'][1] - 1))}
+
+def down(player):
+    return {'xy': (player['xy'][0], min(TILES_Y, player['xy'][1] + 1))}
+
+def lick(player):
+    return {}
+
+
 
 
 class Game(object):
@@ -33,12 +42,28 @@ class Game(object):
         self.loop = asyncio.get_event_loop()
         self.player_id = 0
 
+        actions = [
+            left,
+            right,
+            up,
+            down,
+            lick,
+        ]
+        self.actions = dict(zip(map(bin, range(len(actions))), actions))
+        self.state_encoders = {
+            'xy': lambda xy: f'{xy[0]},{xy[1]}'
+        }
+
     async def connect(self, websocket, path):
         self.player_id += 1
-        self.players[websocket] = {
-            'id': self.player_id,
-            'pos': [random.randint(0, WIDTH), random.randint(0, HEIGHT)]
-        }
+        self.players[websocket] = OrderedDict((
+            ('id', self.player_id),
+            ('xy', (random.randint(0, TILES_X),
+                    random.randint(0, TILES_Y))),
+            ('facing', random.choice(range(4))),
+            # ('action', None),
+        ))
+
         cors = [self.consumer(websocket), self.producer()]
         try:
             done, pending = await asyncio.wait(cors, return_when=asyncio.FIRST_COMPLETED)
@@ -48,27 +73,39 @@ class Game(object):
             del self.players[websocket]
             print('player quit')
 
-    async def consumer(self, websocket):
-        while websocket.open:
-            async for message in websocket:
-                await self.consume(websocket, message)
-                await asyncio.sleep(.01)
 
     async def producer(self):
         while True:
-            state = self.get_state()
+            state = self.encode_state()
             await asyncio.wait([ws.send(state) for ws in self.players])
             print(f'sent: {state}')
             await asyncio.sleep(.1)
 
-    async def consume(self, websocket, message):
-        pos = self.players[websocket]['pos']
-        action = MESSAGE_ACTIONS[message]
-        print(f'{id(websocket)}: {action}')
-        self.players[websocket]['pos'] = ACTIONS[action](pos)
+    async def consumer(self, websocket):
+        while websocket.open:
+            print("ho")
 
-    def get_state(self):
-        return '|'.join(f'{v["id"]},' + ','.join(map(str, v['pos'])) for v in self.players.values())
+            async for message in websocket:
+                await self.consume(websocket, message)
+                await asyncio.sleep(.01)
+
+
+    async def consume(self, websocket, message):
+        action = self.actions[message]
+        player = self.players[websocket]
+        print(f'{id(websocket)}: {action}')
+        self.players[websocket].update(action(player))
+
+    def encode_state(self):
+        return '|'.join(
+            ','.join(
+                self.state_encoders.get(k, lambda x: str(x))(v)
+                for k, v in player.items()
+            ) for player in self.players.values()
+        )
+        return state
+
+
 
 if __name__ == '__main__':
     game = Game()
