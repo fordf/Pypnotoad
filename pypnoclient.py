@@ -62,6 +62,7 @@ class GameClient(object):
         # self.playerGroup = pygame.sprite.OrderedUpdates()
 
     async def run(self):
+
         async with websockets.connect('ws://{}:{}'.format(
             os.environ['server_endpoint'], os.environ['server_ws_port'])
         ) as websocket:
@@ -77,6 +78,7 @@ class GameClient(object):
     async def consume_state(self, websocket):
         while self.running:
             new_state = parse_state(await websocket.recv())
+
             # new = set(new_state) - set(self.playerSprites)
             # gone = set(self.playerSprites) - set(new_state)
             # for i in gone:
@@ -91,11 +93,13 @@ class GameClient(object):
             #         self.playerSprites[i].rect.y = pos[1]
             # self.playerGroup.clear(self.screen, clear_callback)
             # self.playerGroup.draw(self.screen)
+
             await asyncio.sleep(.03)
 
     async def produce_update(self, websocket):
         while self.running:
             for event in pygame.event.get():
+
                 if event.type == QUIT or event.key in QUIT_KEYS:
                     self.running = False
                     break
@@ -106,9 +110,11 @@ class GameClient(object):
                 except KeyError:
                     continue
                 self.scroll_view(event.key)
+
                 pygame.event.clear(KEYDOWN)
             pygame.display.update()
             await asyncio.sleep(.01)
+
 
     def scroll_view(self, direction, stages=8):
         dx = dy = 0
@@ -168,6 +174,7 @@ class GameClient(object):
 def parse_state(state):
     # return {i: (x, y) for i, x, y in [map(int, p.split(',')) for p in state.split('|')]}
     return
+
 
 client = GameClient()
 

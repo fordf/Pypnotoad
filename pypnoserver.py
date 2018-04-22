@@ -11,6 +11,7 @@ import time
 import random
 import asyncio
 import websockets
+
 from collections import OrderedDict, defaultdict
 
 
@@ -32,12 +33,15 @@ def lick(player):
     return {}
 
 
+
+
 class Game(object):
 
     def __init__(self):
         self.players = {}
         self.loop = asyncio.get_event_loop()
         self.player_id = 0
+
         actions = [
             left,
             right,
@@ -59,6 +63,7 @@ class Game(object):
             ('facing', random.choice(range(4))),
             # ('action', None),
         ))
+
         cors = [self.consumer(websocket), self.producer()]
         try:
             done, pending = await asyncio.wait(cors, return_when=asyncio.FIRST_COMPLETED)
@@ -67,6 +72,7 @@ class Game(object):
         finally:
             del self.players[websocket]
             print('player quit')
+
 
     async def producer(self):
         while True:
@@ -78,9 +84,11 @@ class Game(object):
     async def consumer(self, websocket):
         while websocket.open:
             print("ho")
+
             async for message in websocket:
                 await self.consume(websocket, message)
                 await asyncio.sleep(.01)
+
 
     async def consume(self, websocket, message):
         action = self.actions[message]
@@ -96,6 +104,7 @@ class Game(object):
             ) for player in self.players.values()
         )
         return state
+
 
 
 if __name__ == '__main__':
