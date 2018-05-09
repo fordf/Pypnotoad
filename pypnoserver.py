@@ -11,28 +11,42 @@ import time
 import random
 import asyncio
 import websockets
+from queue import PriorityQueue
 from collections import OrderedDict, defaultdict
 
 
 TILES_X, TILES_Y = 100, 100
 
 def left(player):
-    return {'xy': (max(0, player['xy'][0] - 1), player['xy'][1])}
+    return {
+        'xy': (max(0, player['xy'][0] - 1), player['xy'][1]),
+        'facing': 1
+    }
 
 def right(player):
-    return {'xy': (min(TILES_X, player['xy'][0] + 1), player['xy'][1])}
+    return {
+        'xy': (min(TILES_X, player['xy'][0] + 1), player['xy'][1]),
+        'facing': 3
+    }
 
 def up(player):
-    return {'xy': (player['xy'][0], max(0, player['xy'][1] - 1))}
+    return {
+        'xy': (player['xy'][0], max(0, player['xy'][1] - 1)),
+        'facing': 0
+    }
 
 def down(player):
-    return {'xy': (player['xy'][0], min(TILES_Y, player['xy'][1] + 1))}
+    return {
+        'xy': (player['xy'][0], min(TILES_Y, player['xy'][1] + 1)),
+        'facing': 2
+    }
 
-def lick(player):
-    return {}
+# def lick(player):
+#     return {'licking': True}
 
 
 class Game(object):
+    """Async communicator and calculator in chief."""
 
     def __init__(self):
         self.players = {}
@@ -43,7 +57,7 @@ class Game(object):
             right,
             up,
             down,
-            lick,
+            # lick,
         ]
         self.actions = dict(zip(map(bin, range(len(actions))), actions))
         self.state_encoders = {
@@ -54,30 +68,36 @@ class Game(object):
         self.player_id += 1
         self.players[websocket] = OrderedDict((
             ('id', self.player_id),
-            ('xy', (random.randint(0, TILES_X),
-                    random.randint(0, TILES_Y))),
+            ('xy', (random.randint(0, TILES_X - 1),
+                    random.randint(0, TILES_Y - 1))),
             ('facing', random.choice(range(4))),
-            # ('action', None),
+            # ('licking', False),
         ))
         cors = [self.consumer(websocket), self.producer()]
         try:
+            # send player their own initial data
+            await websocket.send(self.encode_state(self.players[websocket]))
+            print('Sent initial')
+            # set up tasks to consume and send data
             done, pending = await asyncio.wait(cors, return_when=asyncio.FIRST_COMPLETED)
             for task in pending:
                 task.cancel()
+        except Exception as e:
+            import pdb; pdb.set_trace()
+            print(e)
         finally:
             del self.players[websocket]
             print('player quit')
 
     async def producer(self):
         while True:
-            state = self.encode_state()
+            state = self.encode_full_state()
             await asyncio.wait([ws.send(state) for ws in self.players])
             print(f'sent: {state}')
             await asyncio.sleep(.1)
 
     async def consumer(self, websocket):
         while websocket.open:
-            print("ho")
             async for message in websocket:
                 await self.consume(websocket, message)
                 await asyncio.sleep(.01)
@@ -88,14 +108,17 @@ class Game(object):
         print(f'{id(websocket)}: {action}')
         self.players[websocket].update(action(player))
 
-    def encode_state(self):
+    def encode_full_state(self):
         return '|'.join(
-            ','.join(
-                self.state_encoders.get(k, lambda x: str(x))(v)
-                for k, v in player.items()
-            ) for player in self.players.values()
+            self.encode_state(player) for player in self.players.values()
         )
         return state
+
+    def encode_state(self, player):
+        return ','.join(
+            self.state_encoders.get(k, lambda x: str(x))(v)
+            for k, v in player.items()
+        )
 
 
 if __name__ == '__main__':
