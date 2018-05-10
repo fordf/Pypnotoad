@@ -145,6 +145,7 @@ class GameClient(object):
             # self.playerGroup.clear(self.screen, self.image.subsurface(self.view_rect))
             # self.view_rect.x = new_state[self.id]['xy'][0]
             # self.view_rect.y = new_state[self.id]['xy'][1]
+            print(self.playerGroup)
             self.playerGroup.draw(self.screen)
             await asyncio.sleep(.03)
 
