@@ -51,8 +51,32 @@ def load_image(file):
     return surface.convert()
 
 
+class RelativeRect(pygame.Rect):
+
+    def __init__(self, rect, client_rect):
+        super(RelativeRect, self).__init__(rect)
+        self.rect = rect
+        self.client_rect = client_rect
+
+    @property
+    def x(self):
+        return self.rect.x - self.client_rect.x - VIEW_SIZE[0] // 2
+
+    @property
+    def y(self):
+        return self.rect.y - self.client_rect.y - VIEW_SIZE[1] // 2
+
+    @x.setter
+    def x(self, value):
+        self.rect.x = value
+
+    @y.setter
+    def y(self, value):
+        self.rect.y = value
+
+
 class Frog(pygame.sprite.Sprite):
-    def __init__(self, player):
+    def __init__(self, player, client_rect):
         super().__init__()
         self.images = [
             pygame.image.load(os.path.join(main_dir, 'data', f)).convert_alpha()
@@ -60,24 +84,22 @@ class Frog(pygame.sprite.Sprite):
         ]
         self.facing = player['facing']
         # self.licking = player['licking']
-        self.rect = self.image.get_rect()
+        self.rect = RelativeRect(self.image.get_rect(), client_rect)
         self.rect.x = player['xy'][0] * TILEWIDTH
         self.rect.y = player['xy'][1] * TILEWIDTH
 
     def move_to(self, x, y, facing):
-        dx, dy = x * TILEWIDTH - self.rect.x, y * TILEWIDTH - self.rect.y
-        self.rect.move_ip(dx, dy)
-        self.rect = self.rect.clamp(MAPRECT)
+        dx, dy = x * TILEWIDTH - self.rect.rect.x, y * TILEWIDTH - self.rect.rect.y
+        print(dx, dy)
+        self.rect.x += dx
+        self.rect.y += dy
+        self.rect.clamp_ip(MAPRECT)
         self.facing = facing
         # self.rect.top = self.origtop - (self.rect.left//self.bounce%2)
 
     @property
     def image(self):
         return self.images[self.facing]
-
-    def neighbors(self, grid):
-        """Return nearby frogs."""
-
 
 
 class GameClient(object):
@@ -92,32 +114,24 @@ class GameClient(object):
         pygame.event.set_allowed(None)
         pygame.event.set_allowed([QUIT, KEYDOWN])
         pygame.key.set_repeat(50, 50)
-        self.playerSprites = {}
-        self.playerGroup = pygame.sprite.OrderedUpdates()
-        # actions = [
-        #     left,
-        #     right,
-        #     up,
-        #     down,
-        #     licking,
-        # ]
-        # self.actions = dict(zip(map(bin, range(len(actions))), actions))
-        self.state_decoders = {
-            'xy': lambda strg: map(int, strg.split(',')),
-            # 'licking': bool,
-        }
+        self.player_sprites = {}
+        self.player_group = pygame.sprite.OrderedUpdates()
 
     async def run(self):
         async with websockets.connect('ws://{}:{}'.format(
             os.environ['server_endpoint'], os.environ['server_ws_port'])
         ) as websocket:
             player_state_str = await websocket.recv()
-            p = list(map(int, player_state_str.split(',')))
-            self.id = p[0]
-            self.view_rect = Rect(p[1] * TILEWIDTH, p[2] * TILEWIDTH, *VIEW_SIZE)
+            iD, x, y, fac = map(int, player_state_str.split(','))
+            self.id = iD
+            self.view_rect = Rect(
+                x * TILEWIDTH - VIEW_SIZE[0] // 2,
+                y * TILEWIDTH - VIEW_SIZE[1] // 2,
+                *VIEW_SIZE)
+            self.view_rect.clamp_ip(MAPRECT)
             self.screen.blit(self.image, Rect(0,0,0,0), area=self.view_rect)
             print(player_state_str, self.view_rect)
-            pygame.display.flip()
+            # pygame.display.flip()
             cors = [self.consume_state(websocket), self.produce_update(websocket)]
             done, pending = await asyncio.wait(
                 cors,
@@ -130,23 +144,22 @@ class GameClient(object):
     async def consume_state(self, websocket):
         while self.running:
             new_state = parse_state(await websocket.recv())
-            new = set(new_state) - set(self.playerSprites)
-            gone = set(self.playerSprites) - set(new_state)
+            gone = set(self.player_sprites) - set(new_state)
             for i in gone:
-                self.playerGroup.remove(self.playerSprites[i])
-                del self.playerSprites[i]
-            for i in new:
-                player_dict = new_state[i]
-                if i not in self.playerSprites:
-                    self.playerSprites[i] = Frog(player_dict)
-                    self.playerGroup.add(self.playerSprites[i])
-                else:
-                    self.playerSprites[i].move_to(*player_dict['xy'], player_dict['facing'])
-            # self.playerGroup.clear(self.screen, self.image.subsurface(self.view_rect))
+                self.player_group.remove(self.player_sprites[i])
+                del self.player_sprites[i]
+            for player_id, player_dict in new_state.items():
+                if player_id not in self.player_sprites:
+                    new_frogtoad = Frog(player_dict, self.view_rect)
+                    self.player_sprites[player_id] = new_frogtoad
+                    self.player_group.add(new_frogtoad)
+                self.player_sprites[player_id].move_to(*player_dict['xy'], player_dict['facing'])
+            # self.player_group.clear(self.screen, self.image.subsurface(self.view_rect))
             # self.view_rect.x = new_state[self.id]['xy'][0]
             # self.view_rect.y = new_state[self.id]['xy'][1]
-            print(self.playerGroup)
-            self.playerGroup.draw(self.screen)
+            for x, y in zip(self.player_group, self.player_sprites.values()):
+                print(x.rect, y.rect)
+            self.player_group.draw(self.screen)
             await asyncio.sleep(.03)
 
     async def produce_update(self, websocket):
@@ -222,11 +235,11 @@ class GameClient(object):
 def parse_state(state):
     players = {}
     for player_state_str in state.split('|'):
-        p = list(map(int, player_state_str.split(',')))
-        players[p[0]] = {
-            'xy': p[1:3],
-            'facing': p[3],
-            # 'licking': p[4],
+        iD, x, y, facing = map(int, player_state_str.split(','))
+        players[iD] = {
+            'xy': (x, y),
+            'facing': facing,
+            # 'licking': ,
         }
     return players
 

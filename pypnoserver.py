@@ -8,6 +8,7 @@ server_ws_port
 
 import os
 import time
+import numpy
 import random
 import asyncio
 import websockets
@@ -45,7 +46,7 @@ def down(player):
 #     return {'licking': True}
 
 
-class Game(object):
+class Game:
     """Async communicator and calculator in chief."""
 
     def __init__(self):
