@@ -51,30 +51,6 @@ def load_image(file):
     return surface.convert()
 
 
-class RelativeRect(pygame.Rect):
-
-    def __init__(self, rect, client_rect):
-        super(RelativeRect, self).__init__(rect)
-        self.rect = rect
-        self.client_rect = client_rect
-
-    @property
-    def x(self):
-        return self.rect.x - self.client_rect.x - VIEW_SIZE[0] // 2
-
-    @property
-    def y(self):
-        return self.rect.y - self.client_rect.y - VIEW_SIZE[1] // 2
-
-    @x.setter
-    def x(self, value):
-        self.rect.x = value
-
-    @y.setter
-    def y(self, value):
-        self.rect.y = value
-
-
 class Frog(pygame.sprite.Sprite):
     def __init__(self, player, client_rect):
         super().__init__()
@@ -84,15 +60,14 @@ class Frog(pygame.sprite.Sprite):
         ]
         self.facing = player['facing']
         # self.licking = player['licking']
-        self.rect = RelativeRect(self.image.get_rect(), client_rect)
+        self.rect = self.image.get_rect()
         self.rect.x = player['xy'][0] * TILEWIDTH
         self.rect.y = player['xy'][1] * TILEWIDTH
 
     def move_to(self, x, y, facing):
-        dx, dy = x * TILEWIDTH - self.rect.rect.x, y * TILEWIDTH - self.rect.rect.y
+        dx, dy = x * TILEWIDTH - self.rect.x, y * TILEWIDTH - self.rect.y
         print(dx, dy)
-        self.rect.x += dx
-        self.rect.y += dy
+        self.rect.move_ip(dx, dy)
         self.rect.clamp_ip(MAPRECT)
         self.facing = facing
         # self.rect.top = self.origtop - (self.rect.left//self.bounce%2)
@@ -144,10 +119,12 @@ class GameClient(object):
     async def consume_state(self, websocket):
         while self.running:
             new_state = parse_state(await websocket.recv())
+            import pdb; pdb.set_trace()
             gone = set(self.player_sprites) - set(new_state)
             for i in gone:
                 self.player_group.remove(self.player_sprites[i])
                 del self.player_sprites[i]
+            # import pdb; pdb.set_trace()
             for player_id, player_dict in new_state.items():
                 if player_id not in self.player_sprites:
                     new_frogtoad = Frog(player_dict, self.view_rect)
@@ -158,7 +135,8 @@ class GameClient(object):
             # self.view_rect.x = new_state[self.id]['xy'][0]
             # self.view_rect.y = new_state[self.id]['xy'][1]
             for x, y in zip(self.player_group, self.player_sprites.values()):
-                print(x.rect, y.rect)
+                print(self.view_rect)
+                print(x.rect)
             self.player_group.draw(self.screen)
             await asyncio.sleep(.03)
 

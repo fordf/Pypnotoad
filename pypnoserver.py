@@ -45,7 +45,6 @@ def down(player):
 # def lick(player):
 #     return {'licking': True}
 
-
 class Game:
     """Async communicator and calculator in chief."""
 
@@ -92,9 +91,14 @@ class Game:
 
     async def producer(self):
         while True:
-            state = self.encode_full_state()
-            await asyncio.wait([ws.send(state) for ws in self.players])
-            print(f'sent: {state}')
+            for ws, player in self.players.items():
+                close_players = []
+                for p in self.players.values():
+                    prel = player.copy()
+                    prel['xy'] = player['xy'][0] - p['xy'][0], player['xy'][1] - p['xy'][1]
+                    close_players.append(prel)
+                await ws.send(self.encode_full_state(close_players))
+            # print(f'sent: {state}')
             await asyncio.sleep(.1)
 
     async def consumer(self, websocket):
@@ -109,11 +113,10 @@ class Game:
         print(f'{id(websocket)}: {action}')
         self.players[websocket].update(action(player))
 
-    def encode_full_state(self):
+    def encode_full_state(self, players):
         return '|'.join(
-            self.encode_state(player) for player in self.players.values()
+            self.encode_state(player) for player in players
         )
-        return state
 
     def encode_state(self, player):
         return ','.join(
