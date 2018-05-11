@@ -66,7 +66,6 @@ class Frog(pygame.sprite.Sprite):
 
     def move_to(self, x, y, facing):
         dx, dy = x * TILEWIDTH - self.rect.x, y * TILEWIDTH - self.rect.y
-        print(dx, dy)
         self.rect.move_ip(dx, dy)
         self.rect.clamp_ip(MAPRECT)
         self.facing = facing
@@ -88,7 +87,7 @@ class GameClient(object):
         pygame.display.flip()
         pygame.event.set_allowed(None)
         pygame.event.set_allowed([QUIT, KEYDOWN])
-        pygame.key.set_repeat(50, 50)
+        pygame.key.set_repeat(200, 200)
         self.player_sprites = {}
         self.player_group = pygame.sprite.OrderedUpdates()
 
@@ -105,7 +104,9 @@ class GameClient(object):
                 *VIEW_SIZE)
             self.view_rect.clamp_ip(MAPRECT)
             self.screen.blit(self.image, Rect(0,0,0,0), area=self.view_rect)
-            print(player_state_str, self.view_rect)
+            print(f'''
+                player_state_str: {player_state_str}
+                self.view_rect: {self.view_rect}''')
             # pygame.display.flip()
             cors = [self.consume_state(websocket), self.produce_update(websocket)]
             done, pending = await asyncio.wait(
@@ -119,12 +120,10 @@ class GameClient(object):
     async def consume_state(self, websocket):
         while self.running:
             new_state = parse_state(await websocket.recv())
-            import pdb; pdb.set_trace()
             gone = set(self.player_sprites) - set(new_state)
             for i in gone:
                 self.player_group.remove(self.player_sprites[i])
                 del self.player_sprites[i]
-            # import pdb; pdb.set_trace()
             for player_id, player_dict in new_state.items():
                 if player_id not in self.player_sprites:
                     new_frogtoad = Frog(player_dict, self.view_rect)
@@ -134,9 +133,7 @@ class GameClient(object):
             # self.player_group.clear(self.screen, self.image.subsurface(self.view_rect))
             # self.view_rect.x = new_state[self.id]['xy'][0]
             # self.view_rect.y = new_state[self.id]['xy'][1]
-            for x, y in zip(self.player_group, self.player_sprites.values()):
-                print(self.view_rect)
-                print(x.rect)
+            print(new_state)
             self.player_group.draw(self.screen)
             await asyncio.sleep(.03)
 

@@ -50,6 +50,7 @@ class Game:
 
     def __init__(self):
         self.players = {}
+        self.state_id = 0
         self.loop = asyncio.get_event_loop()
         self.player_id = 0
         actions = [
@@ -68,11 +69,13 @@ class Game:
         self.player_id += 1
         self.players[websocket] = OrderedDict((
             ('id', self.player_id),
-            ('xy', (random.randint(0, TILES_X - 1),
-                    random.randint(0, TILES_Y - 1))),
+            # ('xy', (random.randint(0, TILES_X - 1),
+            #         random.randint(0, TILES_Y - 1))),
+            ('xy', (10, 10)),
             ('facing', random.choice(range(4))),
             # ('licking', False),
         ))
+        self.state_id = self.state_id + 1 % 5000
         cors = [self.consumer(websocket), self.producer()]
         try:
             # send player their own initial data
@@ -90,16 +93,24 @@ class Game:
             print('player quit')
 
     async def producer(self):
+        state_id = -1
         while True:
+            await asyncio.sleep(.1)
+            if self.state_id == state_id:
+                continue
+            state_id = self.state_id
             for ws, player in self.players.items():
                 close_players = []
                 for p in self.players.values():
-                    prel = player.copy()
-                    prel['xy'] = player['xy'][0] - p['xy'][0], player['xy'][1] - p['xy'][1]
+                    prel = p.copy()
+                    prel['xy'] = (p['xy'][0] - player['xy'][0] + 10,
+                                  p['xy'][1] - player['xy'][1] + 10)
                     close_players.append(prel)
+                print(self.encode_full_state(close_players))
                 await ws.send(self.encode_full_state(close_players))
-            # print(f'sent: {state}')
-            await asyncio.sleep(.1)
+            print(f'''sent
+                players: {[p['xy'] for p in self.players.values()]}
+                state_id: {state_id}''')
 
     async def consumer(self, websocket):
         while websocket.open:
@@ -110,8 +121,9 @@ class Game:
     async def consume(self, websocket, message):
         action = self.actions[message]
         player = self.players[websocket]
-        print(f'{id(websocket)}: {action}')
+        print(f'consumed: {player["id"]}: {action}')
         self.players[websocket].update(action(player))
+        self.state_id = self.state_id + 1 % 5000
 
     def encode_full_state(self, players):
         return '|'.join(
