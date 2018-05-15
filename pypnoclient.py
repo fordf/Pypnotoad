@@ -51,6 +51,9 @@ def load_image(file):
     return surface.convert()
 
 
+
+
+
 class Frog(pygame.sprite.Sprite):
     def __init__(self, player, client_rect):
         super().__init__()
@@ -66,9 +69,10 @@ class Frog(pygame.sprite.Sprite):
 
     def move_to(self, x, y, facing):
         dx, dy = x * TILEWIDTH - self.rect.x, y * TILEWIDTH - self.rect.y
-        self.rect.move_ip(dx, dy)
-        self.rect.clamp_ip(MAPRECT)
-        self.facing = facing
+        if dx or dy:
+            self.rect.move_ip(dx, dy)
+            self.rect.clamp_ip(MAPRECT)
+            self.facing = facing
         # self.rect.top = self.origtop - (self.rect.left//self.bounce%2)
 
     @property
@@ -123,6 +127,7 @@ class GameClient(object):
             gone = set(self.player_sprites) - set(new_state)
             for i in gone:
                 self.player_group.remove(self.player_sprites[i])
+                self.player_map.remove()
                 del self.player_sprites[i]
             for player_id, player_dict in new_state.items():
                 if player_id not in self.player_sprites:
@@ -130,7 +135,9 @@ class GameClient(object):
                     self.player_sprites[player_id] = new_frogtoad
                     self.player_group.add(new_frogtoad)
                 self.player_sprites[player_id].move_to(*player_dict['xy'], player_dict['facing'])
-            # self.player_group.clear(self.screen, self.image.subsurface(self.view_rect))
+            self.player_group.update(self.view_rect)
+            self.player_group.clear(self.screen, self.image.subsurface(self.view_rect))
+            # self.scroll_view(self.player_sprites[player_id]direction)
             # self.view_rect.x = new_state[self.id]['xy'][0]
             # self.view_rect.y = new_state[self.id]['xy'][1]
             print(new_state)
