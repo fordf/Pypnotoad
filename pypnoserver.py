@@ -103,7 +103,6 @@ class Game:
             state_id = self.state_id
             for iD, player in self.players.items():
                 close_players = [self.players[i] for i in self.player_map.get_within_range(player)]
-                print(self.encode_full_state(close_players))
                 await player['websocket'].send(self.encode_full_state(close_players))
             print(f'''sent
                 players: {[p['xy'] for p in self.players.values()]}
