@@ -28,6 +28,7 @@ ACTIONS = [
 ACTION_MESSAGES = dict(zip(ACTIONS, map(bin, range(len(ACTIONS)))))
 
 TILEWIDTH = 32
+
 MAP_TILES = 100, 100
 WINDOW_SIZE = 500, 500
 
@@ -76,7 +77,6 @@ class Frog(pygame.sprite.Sprite):
 
     @property
     def rect(self):
-        print(self.abs_rect)
         return self.abs_rect.move(-self.client_rect.x, -self.client_rect.y)
 
     @property
@@ -91,11 +91,11 @@ class GameClient(object):
         self.running = True
         pygame.init()
         self.screen = pygame.display.set_mode(dim)
-        self.image = load_image("battlemap.png")
+        self.mapimage = load_image("battlemap.png")
         pygame.display.flip()
         pygame.event.set_allowed(None)
         pygame.event.set_allowed([QUIT, KEYDOWN])
-        pygame.key.set_repeat(200, 200)
+        pygame.key.set_repeat(100, 100)
         self.player_sprites = {}
         self.player_group = pygame.sprite.OrderedUpdates()
 
@@ -111,7 +111,7 @@ class GameClient(object):
                 y * TILEWIDTH - VIEW_SIZE[1] // 2,
                 *VIEW_SIZE)
             self.view_rect.clamp_ip(MAPRECT)
-            self.screen.blit(self.image, Rect(0,0,0,0), area=self.view_rect)
+            self.screen.blit(self.mapimage, Rect(0,0,0,0), area=self.view_rect)
             print(f'''
                 player_state_str: {player_state_str}
                 self.view_rect: {self.view_rect}''')
@@ -140,7 +140,7 @@ class GameClient(object):
                     self.player_group.add(new_frogtoad)
                 self.player_sprites[player_id].move_to(*player_dict['xy'], player_dict['facing'])
             # self.player_group.update(self.view_rect)
-            self.player_group.clear(self.screen, self.image.subsurface(self.view_rect))
+            self.player_group.clear(self.screen, self.mapimage.subsurface(self.view_rect))
             # self.scroll_view(self.player_sprites[player_id]direction)
             # self.view_rect.x = new_state[self.id]['xy'][0]
             # self.view_rect.y = new_state[self.id]['xy'][1]
@@ -164,53 +164,62 @@ class GameClient(object):
             await asyncio.sleep(.01)
 
     def scroll_view(self, direction, stages=4):
+        player = self.player_sprites[self.id]
+        if direction == K_UP:
+            if self.view_rect.top <= 0 or player.rect.y > VIEW_SIZE[1] // 2:
+                return
+        if direction == K_DOWN:
+            if self.view_rect.bottom >= MAPRECT.bottom or player.rect.y < VIEW_SIZE[1] // 2:
+                return
+        if direction == K_RIGHT:
+            if self.view_rect.right >= MAPRECT.right or player.rect.x < 320:
+                return
+        if direction == K_LEFT:
+            if self.view_rect.left <= 0 or player.rect.x > 320:
+                return
         screen_rect = self.screen.get_clip()
-        image_w, image_h = self.image.get_size()
+        image_w, image_h = self.mapimage.get_size()
         cur_rect = self.view_rect.copy()
         dst_rect = screen_rect.copy()
         step_size = TILEWIDTH // stages
 
-        self.player_group.clear(self.screen, self.image.subsurface(self.view_rect))
+        self.player_group.clear(self.screen, self.mapimage.subsurface(self.view_rect))
         if direction == K_UP:
-            if self.view_rect.top > 0:
-                cur_rect.h = step_size
-                dst_rect.h = step_size
-                self.view_rect.move_ip(0, -TILEWIDTH)
-                for _ in range(stages):
-                    self.screen.scroll(dy=step_size)
-                    cur_rect.move_ip(0, -step_size)
-                    self.screen.blit(self.image.subsurface(cur_rect), dst_rect)
+            cur_rect.h = step_size
+            dst_rect.h = step_size
+            self.view_rect.move_ip(0, -TILEWIDTH)
+            for _ in range(stages):
+                cur_rect.move_ip(0, -step_size)
+                self.screen.scroll(dy=step_size)
+                # self.screen.blit(self.mapimage.subsurface(cur_rect), dst_rect)
         elif direction == K_DOWN:
-            if self.view_rect.bottom < image_h:
-                cur_rect.h = step_size
-                cur_rect.bottom = self.view_rect.bottom
-                dst_rect.h = step_size
-                dst_rect.bottom = screen_rect.bottom
-                self.view_rect.move_ip(0, TILEWIDTH)
-                for _ in range(stages):
-                    self.screen.scroll(dy=-step_size)
-                    cur_rect.move_ip(0, step_size)
-                    self.screen.blit(self.image.subsurface(cur_rect), dst_rect)
+            cur_rect.h = step_size
+            cur_rect.bottom = self.view_rect.bottom
+            dst_rect.h = step_size
+            dst_rect.bottom = screen_rect.bottom
+            self.view_rect.move_ip(0, TILEWIDTH)
+            for _ in range(stages):
+                cur_rect.move_ip(0, step_size)
+                self.screen.scroll(dy=-step_size)
+                self.screen.blit(self.mapimage.subsurface(cur_rect), dst_rect)
         elif direction == K_LEFT:
-            if self.view_rect.left > 0:
-                cur_rect.w = step_size
-                dst_rect.w = step_size
-                self.view_rect.move_ip(-TILEWIDTH, 0)
-                for _ in range(stages):
-                    self.screen.scroll(dx=step_size)
-                    cur_rect.move_ip(-step_size, 0)
-                    self.screen.blit(self.image.subsurface(cur_rect), dst_rect)
+            cur_rect.w = step_size
+            dst_rect.w = step_size
+            self.view_rect.move_ip(-TILEWIDTH, 0)
+            for _ in range(stages):
+                cur_rect.move_ip(-step_size, 0)
+                self.screen.scroll(dx=step_size)
+                self.screen.blit(self.mapimage.subsurface(cur_rect), dst_rect)
         elif direction == K_RIGHT:
-            if self.view_rect.right < image_w:
-                cur_rect.w = step_size
-                cur_rect.right = self.view_rect.right
-                dst_rect.w = step_size
-                dst_rect.right = screen_rect.right
-                self.view_rect.move_ip(TILEWIDTH, 0)
-                for _ in range(stages):
-                    self.screen.scroll(dx=-step_size)
-                    cur_rect.move_ip(step_size, 0)
-                    self.screen.blit(self.image.subsurface(cur_rect), dst_rect)
+            cur_rect.w = step_size
+            cur_rect.right = self.view_rect.right
+            dst_rect.w = step_size
+            dst_rect.right = screen_rect.right
+            self.view_rect.move_ip(TILEWIDTH, 0)
+            for _ in range(stages):
+                cur_rect.move_ip(step_size, 0)
+                self.screen.scroll(dx=-step_size)
+                self.screen.blit(self.mapimage.subsurface(cur_rect), dst_rect)
 
 
 def parse_state(state):
